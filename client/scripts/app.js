@@ -26,7 +26,16 @@ app.send = function(data) {
 app.fetch = function() {
   $.ajax({
     type: 'GET',
-    url: url
+    url: url,
+    success: function(res) {
+      console.log(res);
+      let data = res.results;
+      for (var i = 0; i < data.length; i++) {
+        //console.log(data[i])
+        $('#chats').append('<div class="chat"><p><b>' + data[i].username + ': </b><span>' + data[i].text + '</span></p>' + '<span><small>' + data[i].createdAt + '</small></span></div>');
+      }
+    }
+
   });
 };
 
