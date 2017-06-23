@@ -1,21 +1,26 @@
-// YOUR CODE HERE:
+
 let app = {};
 
 app.init = function() {
+  app.fetch();
+};
 
-};
-let url = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
-let clientData = {
-  name: 'Nick'
-};
+app.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
 
 app.send = function(data) {
   //console.log('Data',data);
   $.ajax({
-    url: url,
+    url: app.server,
     type: 'POST',
     data: JSON.stringify(data),
-    dataType: 'json'
+    contentType: 'application/json',
+    success: function (data) {
+      console.log('chatterbox: Message sent',data);
+    },
+    error: function (data) {
+      // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+      console.error('chatterbox: Failed to send message', data);
+    }
   });
 };
 
@@ -26,16 +31,30 @@ app.send = function(data) {
 app.fetch = function() {
   $.ajax({
     type: 'GET',
-    url: url,
-    success: function(res) {
-      console.log(res);
-      let data = res.results;
-      for (var i = 0; i < data.length; i++) {
-        //console.log(data[i])
-        $('#chats').append('<div class="chat"><p><b>' + data[i].username + ': </b><span>' + data[i].text + '</span></p>' + '<span><small>' + data[i].createdAt + '</small></span></div>');
+    url: app.server,
+    success: function(data) {
+
+      for (let i = 0; i < data.results.length; i++) {
+        //console.log(data.results[i]);
+        var text = document.createTextNode(data.results[i].text);
+        //console.log(text);
+        $('#chats').append(`
+          <div class="chat">
+            <p style="margin:0;" id="${i}">
+              <span class="username">
+                ${data.results[i].username}
+              </span>
+            </p>
+            <em>
+              <small>
+                Message Sent: ${data.results[i].createdAt}
+              </small>
+            <em>
+          </div>
+        `);
+        $('#' + i).append(text);
       }
     }
-
   });
 };
 
@@ -44,19 +63,58 @@ app.clearMessages = function() {
 };
 
 app.renderMessage = function(msgObj) {
-  $('#chats').append('<p>' + msgObj.text + '</p>');
+  $('#chats').append('<p class="username">'+ msgObj.username + ': ' + msgObj.text + '</p>');
 };
 
 app.renderRoom = function(room) {
   $('#roomSelect').append('<p>' + room + '</p>');
 };
 
+app.handleUsernameClick = function() {
+  let name = $(this).text();
+  let $users = $('.username');
+  //console.log($users.length)
+
+  $users.each(function(index, user) {
+    if(user.textContent === name) {
+      $(this).addClass('friend');
+    }
+  });
+};
+
+app.handleSubmit = function() {
+  let msg = $('#message').val();
+  let msgObj = {};
+  msgObj.username = 'userJay';
+  msgObj.text = msg;
+  msgObj.roomname = 'lobby';
+  console.log(msg);
+  if (msg !== undefined) {
+    app.send(msgObj);
+  }
+};
 
 
+app.init();
 
 
+$(document).ready(function() {
 
-app.fetch();
+  $('form').on('submit', function(e) {
+    e.preventDefault();
+    app.handleSubmit();
+    //let msg = $('#message').val();
+    //console.log(msg);
+    //app.send(msg);
+  });
+
+  // Selects all the friends on click of the username
+  $('#chats').on('click', '.username', function() {
+    app.handleUsernameClick.call($(this));
+  });
+});
+
+
 
 
 
