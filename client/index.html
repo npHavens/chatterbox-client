@@ -28,19 +28,25 @@
     <div id="main">
       <h1>chatterbox</h1>
       <span>Room:</span>
-      <select>
-        <option value="lobby">Lobby</option>
+      <select id="roomSelect">
       </select>
+
+
+
+
       <!-- Your HTML goes here! -->
       <div class="controls">
-        <form action="">
-          <input id="message" type="text"/>
+      <form id="roomForm">
+        <input type="text" id="newRoomName" placeholder="Create New Chat Room">
+        <input type="submit" id="addRoom" name="" value="Create Room">
+      </form>
+        <form id="msgForm" action="">
+          <input id="message" type="text" placeholder="Type message..."/>
           <input type="submit" name="button" class="submit" id="send">
           <!-- <a href="#" class="submit" id="send">Send Message</a> -->
         </form>
       </div>
       <div id="chats"></div>
-      <div id="roomSelect"></div><!-- #roomSelect -->
 
     </div>
     <!-- <div id="chats"></div> -->
