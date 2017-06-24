@@ -8,7 +8,6 @@ app.init = function() {
 app.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
 
 app.send = function(data) {
-  //console.log('Data',data);
   $.ajax({
     url: app.server,
     type: 'POST',
@@ -16,43 +15,48 @@ app.send = function(data) {
     contentType: 'application/json',
     success: function (data) {
       console.log('chatterbox: Message sent',data);
+      //app.fetch();
+      $('#chats').load("../index.html");
     },
     error: function (data) {
-      // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
       console.error('chatterbox: Failed to send message', data);
     }
   });
 };
 
-//http://docs.parseplatform.org/rest/guide/#queries
-
-// curl -X GET  -H "X-Parse-Application-Id: 72b8e073a4abde10221ce95f38ed1c63bd7f3d6b"  -H "X-Parse-REST-API-Key: cf1ce23a61e2a40702c347b7dc1e0af8c28f6c7a" http://parse.sfm8.hackreactor.com/chatterbox/classes/messages
-
 app.fetch = function() {
   $.ajax({
     type: 'GET',
-    url: app.server,
+    url: app.server + '?limit=100&order=-updatedAt',
     success: function(data) {
 
       for (let i = 0; i < data.results.length; i++) {
         //console.log(data.results[i]);
-        var text = document.createTextNode(data.results[i].text);
+        //var text = document.createTextNode(data.results[i].text);
+        let msg = {};
+        msg.username = data.results[i].username;
+        msg.text = data.results[i].text;
+        msg.roomname = data.results[i].roomname;
+        msg.createdAt = data.results[i].createdAt;
+
+
         //console.log(text);
-        $('#chats').append(`
-          <div class="chat">
-            <p style="margin:0;" id="${i}">
-              <span class="username">
-                ${data.results[i].username}
-              </span>
-            </p>
-            <em>
-              <small>
-                Message Sent: ${data.results[i].createdAt}
-              </small>
-            <em>
-          </div>
-        `);
-        $('#' + i).append(text);
+        // $('#chats').append(`
+        //   <div class="chat">
+        //     <p style="margin:0;">
+        //       <span class="username">
+        //         ${data.results[i].username}
+        //       </span>
+        //     </p>
+        //     <em>
+        //       <small>
+        //         Message Sent: ${data.results[i].createdAt}
+        //       </small>
+        //     <em>
+        //   </div>
+        // `);
+        // $('p').append(text);
+        app.renderMessage(msg);
       }
     }
   });
@@ -63,7 +67,14 @@ app.clearMessages = function() {
 };
 
 app.renderMessage = function(msgObj) {
-  $('#chats').append('<p class="username">'+ msgObj.username + ': ' + msgObj.text + '</p>');
+  let $chatEl = $(`<div class="chat">
+    <span class="username">  ${msgObj.username} : </span>
+    <span class="text"></span>
+    <small style="display:block;" class="timeStamp">${msgObj.createdAt}</small>
+    </div>`);
+
+  $chatEl.find('.text').text(msgObj.text);
+  $('#chats').append($chatEl);
 };
 
 app.renderRoom = function(room) {
@@ -82,10 +93,10 @@ app.handleUsernameClick = function() {
   });
 };
 
-app.handleSubmit = function() {
+app.handleSubmit = function(user) {
   let msg = $('#message').val();
   let msgObj = {};
-  msgObj.username = 'userJay';
+  msgObj.username = user;
   msgObj.text = msg;
   msgObj.roomname = 'lobby';
   console.log(msg);
@@ -102,7 +113,10 @@ $(document).ready(function() {
 
   $('form').on('submit', function(e) {
     e.preventDefault();
-    app.handleSubmit();
+    //var url = window.location.href;
+    var userName = window.location.search.substring(10);
+    //console.log(userName)
+    app.handleSubmit(userName);
     //let msg = $('#message').val();
     //console.log(msg);
     //app.send(msg);
