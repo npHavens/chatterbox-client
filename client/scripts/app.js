@@ -1,8 +1,12 @@
 
 let app = {};
 
+app.friends = [];
+
 app.init = function() {
   app.fetch();
+
+  setInterval(app.fetch, 1000);
 };
 
 app.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
@@ -15,8 +19,8 @@ app.send = function(data) {
     contentType: 'application/json',
     success: function (data) {
       console.log('chatterbox: Message sent',data);
-      //app.fetch();
-      $('#chats').load("../index.html");
+      app.fetch();
+      //$('#chats').load("../index.html");
     },
     error: function (data) {
       console.error('chatterbox: Failed to send message', data);
@@ -29,7 +33,8 @@ app.fetch = function() {
     type: 'GET',
     url: app.server + '?limit=100&order=-updatedAt',
     success: function(data) {
-
+      console.log(data);
+      app.clearMessages();
       for (let i = 0; i < data.results.length; i++) {
         //console.log(data.results[i]);
         //var text = document.createTextNode(data.results[i].text);
@@ -38,8 +43,6 @@ app.fetch = function() {
         msg.text = data.results[i].text;
         msg.roomname = data.results[i].roomname;
         msg.createdAt = data.results[i].createdAt;
-
-
         //console.log(text);
         // $('#chats').append(`
         //   <div class="chat">
@@ -64,17 +67,25 @@ app.fetch = function() {
 
 app.clearMessages = function() {
   $('#chats').html('');
+  //app.fetch();
 };
 
 app.renderMessage = function(msgObj) {
   let $chatEl = $(`<div class="chat">
-    <span class="username">  ${msgObj.username} : </span>
+    <span class="username">  ${msgObj.username}</span>
     <span class="text"></span>
-    <small style="display:block;" class="timeStamp">${msgObj.createdAt}</small>
+    <small style="display:block;" class="timeStamp"> ${msgObj.createdAt}</small>
     </div>`);
 
-  $chatEl.find('.text').text(msgObj.text);
+  $chatEl.find('.text').text(': ' + msgObj.text);
   $('#chats').append($chatEl);
+
+  app.friends.forEach(function(friend) {
+    if (friend === msgObj.username) {
+      $chatEl.find('.username').addClass('friend');
+
+    }
+  });
 };
 
 app.renderRoom = function(room) {
@@ -82,9 +93,13 @@ app.renderRoom = function(room) {
 };
 
 app.handleUsernameClick = function() {
-  let name = $(this).text();
+  let name = $.trim($(this).text());
+  //console.log(name)
+
+  app.friends.push(name);
+  //console.log(app.friends)
   let $users = $('.username');
-  //console.log($users.length)
+  //console.log($users.length);
 
   $users.each(function(index, user) {
     if(user.textContent === name) {
@@ -113,13 +128,9 @@ $(document).ready(function() {
 
   $('form').on('submit', function(e) {
     e.preventDefault();
-    //var url = window.location.href;
     var userName = window.location.search.substring(10);
-    //console.log(userName)
     app.handleSubmit(userName);
-    //let msg = $('#message').val();
-    //console.log(msg);
-    //app.send(msg);
+    $('#message').val('');
   });
 
   // Selects all the friends on click of the username
