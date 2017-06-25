@@ -1,13 +1,8 @@
 
-let app = {};
-
-app.friends = [];
-
-app.roomNames = [];
+let app = {friends: [], roomNames: []};
 
 app.init = function() {
   app.fetch();
-
   setInterval(app.fetch, 1000);
 };
 
@@ -20,9 +15,8 @@ app.send = function(data) {
     data: JSON.stringify(data),
     contentType: 'application/json',
     success: function (data) {
-      console.log('chatterbox: Message sent',data);
+      console.log('chatterbox: Message sent', data);
       app.fetch();
-      //$('#chats').load("../index.html");
     },
     error: function (data) {
       console.error('chatterbox: Failed to send message', data);
@@ -35,55 +29,30 @@ app.fetch = function() {
     type: 'GET',
     url: app.server + '?limit=100&order=-updatedAt',
     success: function(data) {
-      //console.log(data.results);
-
-
       app.clearMessages();
       for (let i = 0; i < data.results.length; i++) {
         let rmName = data.results[i].roomname;
-        //console.log(data.results[i].roomname);
-        if(app.roomNames.indexOf(rmName) === -1) {
-          app.roomNames.push(rmName);
-          $('#roomSelect').append("<option value=" + rmName + ">" + rmName + "</option>");
-          //console.log(app.roomNames);
+
+        if (app.roomNames.indexOf(rmName) === -1) {
+          app.renderRoom(rmName);
         }
-        //var text = document.createTextNode(data.results[i].text);
+
         let msg = {};
         msg.username = data.results[i].username;
         msg.text = data.results[i].text;
         msg.roomname = data.results[i].roomname;
         msg.createdAt = data.results[i].createdAt;
-        //console.log(text);
-        // $('#chats').append(`
-        //   <div class="chat">
-        //     <p style="margin:0;">
-        //       <span class="username">
-        //         ${data.results[i].username}
-        //       </span>
-        //     </p>
-        //     <em>
-        //       <small>
-        //         Message Sent: ${data.results[i].createdAt}
-        //       </small>
-        //     <em>
-        //   </div>
-        // `);
-        // $('p').append(text);
-        if($('#roomSelect :selected').text().toLowerCase() === data.results[i].roomname) {
-          //console.log("!!!")
+
+        if ($('#roomSelect :selected').text().toLowerCase() === msg.roomname) {
           app.renderMessage(msg);
         }
-
-
       }
-
     }
   });
 };
 
 app.clearMessages = function() {
   $('#chats').html('');
-  //app.fetch();
 };
 
 app.renderMessage = function(msgObj) {
@@ -100,28 +69,22 @@ app.renderMessage = function(msgObj) {
   app.friends.forEach(function(friend) {
     if (friend === msgObj.username) {
       $chatEl.find('.username').addClass('friend').next().addClass('bold');
-
     }
   });
 };
 
 app.renderRoom = function(room) {
-  $('#roomSelect').append("<option value=" + room + ">" + room + "</option>");
+  app.roomNames.push(room);
+  $('#roomSelect').append('<option value=' + room + '>' + room + '</option>');
 };
 
 app.handleUsernameClick = function() {
   let name = $.trim($(this).text());
-
   app.friends.push(name);
-  //console.log(app.friends)
   let $users = $('.username');
-  //console.log($users.length)
 
-  $users.each(function(index, user) {
-    //console.log($.trim($(this).text()))
-    //console.log($.trim($(this).text()))
-    if($.trim($(this).text()) === name) {
-      //console.log('matched')
+  $users.each(function() {
+    if ($.trim($(this).text()) === name) {
       $(this).addClass('friend');
       $(this).next().addClass('bold');
     }
@@ -135,8 +98,8 @@ app.handleSubmit = function(user) {
   msgObj.username = user;
   msgObj.text = msg;
   msgObj.roomname = $('#roomSelect :selected').text().toLowerCase();
-  console.log(msg);
-  if (msg !== undefined) {
+
+  if (msg) {
     app.send(msgObj);
   }
 };
@@ -165,8 +128,6 @@ $(document).ready(function() {
   $('#roomForm').on('submit', function(e) {
     e.preventDefault();
     let newRoom = $('#newRoomName').val();
-    //console.log(app.roomNames)
-    app.roomNames.push(newRoom);
     app.renderRoom(newRoom);
   });
 });
